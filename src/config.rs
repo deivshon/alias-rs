@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{convert, ffi::OsStr, fs, io, path::Path, str::FromStr};
+use std::{convert, fs, io, path::Path, str::FromStr};
 
 use serde::Deserialize;
 
@@ -55,21 +55,11 @@ impl FromStr for Shell {
     type Err = ShellParsingError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let path = Path::new(s);
-
-        let os_file_name: &OsStr;
-        if let Some(f) = path.file_name() {
-            os_file_name = f;
-        } else {
-            return Err(ShellParsingError::NoFileName);
-        }
-
-        let file_name: &str;
-        if let Some(f) = os_file_name.to_str() {
-            file_name = f
-        } else {
-            return Err(ShellParsingError::BorkedOsStr);
-        }
+        let file_name: &str = Path::new(s)
+            .file_name()
+            .ok_or(ShellParsingError::NoFileName)?
+            .to_str()
+            .ok_or(ShellParsingError::BorkedOsStr)?;
 
         match file_name {
             "bash" => Ok(Shell::Bash),
