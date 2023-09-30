@@ -5,7 +5,7 @@ use std::{env, process::exit, str::FromStr};
 
 use config::Config;
 
-use argparse::{ArgumentParser, StoreOption};
+use argparse::{ArgumentParser, Collect, StoreOption, StoreTrue};
 
 use crate::shell::Shell;
 
@@ -17,8 +17,9 @@ fn failure(msg: String) -> ! {
 }
 
 fn main() {
-    let mut config_path: Option<String> = None;
+    let mut configs_paths: Vec<String> = Vec::new();
     let mut shell: Option<Shell> = None;
+    let mut always_include: bool = false;
 
     let config_option_help = format!(
         "Path to the configuration file (default: $HOME/{})",
@@ -28,11 +29,8 @@ fn main() {
     {
         let mut ap = ArgumentParser::new();
 
-        ap.refer(&mut config_path).add_option(
-            &["-c", "--config"],
-            StoreOption,
-            &config_option_help,
-        );
+        ap.refer(&mut configs_paths)
+            .add_option(&["-c", "--config"], Collect, &config_option_help);
 
         ap.refer(&mut shell).add_option(
             &["-s", "--shell"],
@@ -40,21 +38,17 @@ fn main() {
             "Shell to create aliases for (default: $SHELL)",
         );
 
+        ap.refer(&mut always_include).add_option(&["-a", "--always-include"], StoreTrue, "Include the default configuration file when others are specified through command line arguments");
+
         ap.parse_args_or_exit();
     }
 
-    let config_path = match config_path {
-        Some(c) => c,
-        None => match env::var("HOME") {
-            Ok(h) => format!("{}/{}", h, DEFAULT_CONFIG_PATH),
-            Err(_) => failure("Could not obtain default config path".to_string()),
-        },
-    };
-
-    let config = match Config::from_file(config_path.as_str()) {
-        Ok(c) => c,
-        Err(e) => failure(format!("Could not obtain config: {}", e)),
-    };
+    if configs_paths.is_empty() || always_include {
+        match env::var("HOME") {
+            Ok(h) => configs_paths.push(format!("{}/{}", h, DEFAULT_CONFIG_PATH)),
+            Err(_) => failure("Could not obtain default configuration path".to_string()),
+        }
+    }
 
     let shell = match shell {
         Some(s) => s,
@@ -68,9 +62,17 @@ fn main() {
     };
 
     let mut alias_strings: Vec<String> = vec![];
-    for alias in config.aliases {
-        if let Some(alias_string) = shell.create_alias(&alias) {
-            alias_strings.push(alias_string);
+
+    for path in configs_paths {
+        let config = match Config::from_file(path.as_str()) {
+            Ok(c) => c,
+            Err(e) => failure(format!("Could not obtain config for path: {}: {}", path, e)),
+        };
+
+        for alias in config.aliases {
+            if let Some(alias_string) = shell.create_alias(&alias) {
+                alias_strings.push(alias_string);
+            }
         }
     }
 

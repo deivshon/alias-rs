@@ -33,10 +33,11 @@ Refer to `config.example.json` for an example configuration
 
 ## Command line arguments
 
-| Argument | Long argument | Description                                             | Optional | Default                              |
-| -------- | ------------- | ------------------------------------------------------- | -------- | ------------------------------------ |
-| `-c`     | `--config`    | Path of the configuration file                          | Yes      | `$HOME/.config/alias-rs/config.json` |
-| `-s`     | `--shell`     | Target shell for which the aliases should be translated | Yes      | `$SHELL`                             |
+| Argument | Long argument      | Description                                                                                     | Optional | Default                              |
+| -------- | ------------------ | ----------------------------------------------------------------------------------------------- | -------- | ------------------------------------ |
+| `-c`     | `--config`         | Path of the configuration file                                                                  | Yes      | `$HOME/.config/alias-rs/config.json` |
+| `-s`     | `--shell`          | Target shell for which the aliases should be translated                                         | Yes      | `$SHELL`                             |
+| `-a`     | `--always-include` | Include the default configuration file when others are specified through command line arguments | Yes      | `false`                              |
 
 ## Installation
 
