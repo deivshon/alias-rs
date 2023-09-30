@@ -1,0 +1,15 @@
+{
+    "aliases": [
+        {
+            "alias": "ls",
+            "equals": "eza"
+        },
+        {
+            "alias": "ll",
+            "equals": "eza -laF",
+            "shells": {
+                "whitelist": ["bash"]
+            }
+        }
+    ]
+}
