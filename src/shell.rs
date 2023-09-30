@@ -11,6 +11,12 @@ use crate::config::{Alias, ShellList};
 pub enum Shell {
     Bash,
     Fish,
+    Zsh,
+    #[serde(alias = "csh")]
+    Tcsh,
+    Ksh,
+    Dash,
+    Ash,
 }
 
 pub enum ShellParsingError {
@@ -41,9 +47,14 @@ impl FromStr for Shell {
             .to_str()
             .ok_or(ShellParsingError::BorkedOsStr)?;
 
-        match file_name {
+        match file_name.to_lowercase().as_str() {
             "bash" => Ok(Shell::Bash),
             "fish" => Ok(Shell::Fish),
+            "zsh" => Ok(Shell::Zsh),
+            "tcsh" | "csh" => Ok(Shell::Tcsh),
+            "ksh" => Ok(Shell::Ksh),
+            "dash" => Ok(Shell::Dash),
+            "ash" => Ok(Shell::Ash),
             unknown => Err(ShellParsingError::UnknownShell(unknown.to_string())),
         }
     }
@@ -67,18 +78,48 @@ impl Shell {
         }
 
         match self {
-            Shell::Bash => Some(Shell::bash_alias(alias)),
             Shell::Fish => Some(Shell::fish_alias(alias)),
+            Shell::Bash => Some(Shell::bash_alias(alias)),
+            Shell::Zsh => Some(Shell::zsh_alias(alias)),
+            Shell::Tcsh => Some(Shell::tcsh_alias(alias)),
+            Shell::Ksh => Some(Shell::ksh_alias(alias)),
+            Shell::Dash => Some(Shell::dash_alias(alias)),
+            Shell::Ash => Some(Shell::ash_alias(alias)),
         }
     }
 
-    #[inline]
+    #[inline(always)]
     fn fish_alias(alias: &Alias) -> String {
         format!("alias {} \"{}\";", alias.alias, alias.equals)
     }
 
-    #[inline]
+    #[inline(always)]
     fn bash_alias(alias: &Alias) -> String {
         format!("alias {}=\"{}\";", alias.alias, alias.equals)
+    }
+
+    #[inline(always)]
+    fn zsh_alias(alias: &Alias) -> String {
+        Shell::bash_alias(alias)
+    }
+
+    #[inline(always)]
+    fn tcsh_alias(alias: &Alias) -> String {
+        Shell::fish_alias(alias)
+    }
+
+    #[inline(always)]
+    fn ksh_alias(alias: &Alias) -> String {
+        Shell::bash_alias(alias)
+    }
+
+    #[inline(always)]
+    fn dash_alias(alias: &Alias) -> String {
+        Shell::bash_alias(alias)
+    }
+
+    #[inline(always)]
+    fn ash_alias(alias: &Alias) -> String {
+        Shell::bash_alias(alias)
     }
 }
