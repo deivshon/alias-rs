@@ -18,13 +18,10 @@ fn failure(msg: String) -> ! {
 
 fn main() {
     let mut config_path: Option<String> = None;
+    let mut shell: Option<Shell> = None;
+
     let config_option_help = format!(
         "Path to the configuration file (default: $HOME/{})",
-        DEFAULT_CONFIG_PATH
-    );
-    let mut shell: Option<Shell> = None;
-    let shell_option_help = format!(
-        "Shell to create aliases for (default: $SHELL/{})",
         DEFAULT_CONFIG_PATH
     );
 
@@ -37,8 +34,11 @@ fn main() {
             &config_option_help,
         );
 
-        ap.refer(&mut shell)
-            .add_option(&["-s", "--shell"], StoreOption, &shell_option_help);
+        ap.refer(&mut shell).add_option(
+            &["-s", "--shell"],
+            StoreOption,
+            "Shell to create aliases for (default: $SHELL)",
+        );
 
         ap.parse_args_or_exit();
     }
