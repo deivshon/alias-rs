@@ -1,7 +1,9 @@
 use core::fmt;
-use std::{convert, fs, io, path::Path, str::FromStr};
+use std::{convert, fs, io, path::Path};
 
 use serde::Deserialize;
+
+use crate::shell::Shell;
 
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
@@ -24,51 +26,6 @@ pub enum ShellList {
     Blacklist(Vec<Shell>),
     Whitelist(Vec<Shell>),
 }
-
-#[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-#[serde(rename_all = "lowercase")]
-pub enum Shell {
-    Bash,
-    Fish,
-}
-
-pub enum ShellParsingError {
-    UnknownShell(String),
-    BorkedOsStr,
-    NoFileName,
-}
-
-impl fmt::Display for ShellParsingError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            ShellParsingError::UnknownShell(unknown_shell) => {
-                write!(f, "Unknown shell: {}", unknown_shell)
-            }
-            ShellParsingError::NoFileName => write!(f, "Could not get file name from shell path"),
-            ShellParsingError::BorkedOsStr => write!(f, "Could not convert shell OsStr to &str"),
-        }
-    }
-}
-
-impl FromStr for Shell {
-    type Err = ShellParsingError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let file_name: &str = Path::new(s)
-            .file_name()
-            .ok_or(ShellParsingError::NoFileName)?
-            .to_str()
-            .ok_or(ShellParsingError::BorkedOsStr)?;
-
-        match file_name {
-            "bash" => Ok(Shell::Bash),
-            "fish" => Ok(Shell::Fish),
-            unknown => Err(ShellParsingError::UnknownShell(unknown.to_string())),
-        }
-    }
-}
-
 pub enum ConfigError {
     Io(io::Error),
     Deserialization(serde_json::Error),
@@ -98,6 +55,7 @@ impl convert::From<serde_json::Error> for ConfigError {
 }
 
 impl Config {
+    // TODO enforce no spaces in alias
     pub fn from_file(path: &str) -> Result<Self, ConfigError> {
         let path = Path::new(path);
         let file_content = fs::read_to_string(&path)?;

@@ -1,4 +1,5 @@
 pub mod config;
+pub mod shell;
 
 use std::{env, process::exit, str::FromStr};
 
@@ -6,7 +7,7 @@ use config::Config;
 
 use argparse::{ArgumentParser, StoreOption};
 
-use crate::config::Shell;
+use crate::shell::Shell;
 
 const DEFAULT_CONFIG_PATH: &str = ".config/alias-rs/config.json";
 
@@ -66,5 +67,12 @@ fn main() {
         },
     };
 
-    println!("{:?}, {:?}", config, shell);
+    let mut alias_strings: Vec<String> = vec![];
+    for alias in config.aliases {
+        if let Some(alias_string) = shell.create_alias(&alias) {
+            alias_strings.push(alias_string);
+        }
+    }
+
+    println!("{}", alias_strings.join(""));
 }
